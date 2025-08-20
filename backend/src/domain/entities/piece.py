@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from ..value_objects.color import Color
-from ..value_objects.piece_type import PieceType
+from ..value_objects.piece_type import PieceType, Color
 from ..value_objects.position import Position
 
 

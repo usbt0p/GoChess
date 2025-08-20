@@ -1,6 +1,6 @@
 from enum import Enum, auto
 from .board import Board
-from ..value_objects.color import Color
+from ..value_objects.piece_type import Color
 
 
 class GamePhase(Enum):
@@ -25,6 +25,13 @@ class GameState:
         else:
             # TODO
             pass
+    
+    def switch_player(self):
+        """Switches the current player."""
+        if self.current_player_color == Color.WHITE:
+            self.current_player_color = Color.BLACK
+        else:
+            self.current_player_color = Color.WHITE
 
     def is_checkmate(self) -> bool:
         # TODO

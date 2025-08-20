@@ -13,11 +13,17 @@ class Validator(ABC):
 '''
 - phase switch validator
 - piece placement validator
-- piece movement validator
+- piece movement rules validator (pawns move forward, etc)
+
+- algebraic notation validator
+    - grammar
+    - syntax
+    - correspondence with piece movement and board state
 
 - valid movement (inside board, not occupied by own piece, etc.)
 - legal movement validator (e.g., no moving into check)
 - check validator
+- capture validator
 - checkmate validator
 - stalemate validator
 - castling validator
