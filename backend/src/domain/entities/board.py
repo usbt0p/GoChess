@@ -1,5 +1,5 @@
 from typing import Optional
-from .piece import Piece
+
 from ..value_objects.position import Position
 from ..exceptions.game_error import *
 
@@ -8,14 +8,14 @@ class Board:
     """Represents the chess board."""
 
     def __init__(self, size: int = 8):
-
+        from ..entities.piece import Piece
         self._size = size
         # just a list of lists
         self._grid: list[list[Optional[Piece]]] = [
             [None for _ in range(size)] for _ in range(size)
         ]
 
-    def place_piece(self, piece: Piece, position: Position):
+    def place_piece(self, piece, position: Position):
         
         if not piece:
             raise ValueError("Invalid piece")
@@ -25,7 +25,7 @@ class Board:
         else:
             raise ValueError("Invalid board position")
 
-    def get_piece(self, position: Position) -> Optional[Piece]:
+    def get_piece(self, position: Position):
         
         if self.is_valid_position(position):
             return self._grid[position.row][position.col]
