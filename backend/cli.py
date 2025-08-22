@@ -4,7 +4,6 @@ import os
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-
 from src.domain.services.game import Game
 from src.domain.value_objects.position import Position
 from src.domain.exceptions.game_error import InvalidMoveError
