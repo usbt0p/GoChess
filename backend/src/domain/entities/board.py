@@ -9,7 +9,7 @@ class Board:
 
     def __init__(self, size: int = 8):
         from ..entities.piece import Piece
-        self._size = size
+        self.size = size
         # just a list of lists
         self._grid: list[list[Optional[Piece]]] = [
             [None for _ in range(size)] for _ in range(size)
@@ -42,7 +42,7 @@ class Board:
 
     def is_valid_position(self, position: Position) -> bool:
         
-        return 0 <= position.row < self._size and 0 <= position.col < self._size
+        return 0 <= position.row < self.size and 0 <= position.col < self.size
 
     def __repr__(self) -> str:
         # Find the max width of any piece's string representation
@@ -63,3 +63,12 @@ class Board:
                 line.append(cell_fmt.format(cell))
             lines.append(" ".join(line))
         return "\n".join(lines)
+    
+    def copy(self):
+        new_board = Board(self.size)
+        for r in range(self.size):
+            for c in range(self.size):
+                piece = self.get_piece(Position(r, c))
+                if piece:
+                    new_board.place_piece(piece, Position(r, c))
+        return new_board

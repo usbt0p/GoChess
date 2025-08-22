@@ -1,9 +1,12 @@
 from src.domain.entities.board import Board
 from src.domain.entities.game_state import GameState
-from src.domain.value_objects.piece_type import Color
-from src.domain.services.go_chess_engine import GoChessEngine
-from src.domain.value_objects.position import Position
 from src.domain.entities.piece import Piece, Pawn, Knight, Bishop, Rook, Queen, King 
+
+from src.domain.value_objects.piece_type import Color
+from src.domain.value_objects.position import Position
+
+from src.domain.services.go_chess_engine import GoChessEngine
+from src.domain.services.validators import CheckValidator
 
 
         
@@ -16,7 +19,9 @@ class Game:
         self.state = GameState(self.board, Color.WHITE)
 
         # TODO populate validator according to the config
-        self.engine = GoChessEngine(self.state, [])
+        self.engine = GoChessEngine(self.state, [
+            CheckValidator()
+        ])
         self._build()
 
     def _build(self):
@@ -52,13 +57,24 @@ class Game:
         for piece_type, color, position in piece_positions:
             self.engine.place_piece(piece_type(color), position)
 
+        # premove e4 and e5 for testing
+        # TODO remove this in production
+        self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
+        self.state.switch_player() # TODO maybe this should be done within moving, or might cause problems
+        self.engine.move_piece(Position.from_algebraic("e7"), Position.from_algebraic("e5"))
+        self.state.switch_player() 
+        self.engine.move_piece(Position.from_algebraic("f2"), Position.from_algebraic("f4"))
+        self.state.switch_player()  
+        self.engine.move_piece(Position.from_algebraic("d8"), Position.from_algebraic("h4"))
+        self.state.switch_player()
+
     def step(self):
         """Advance the game state by one turn."""
-
-        print(self.board)
+        
         # check whose turn it is
         current_color = self.state.current_player_color
-        
+        print(self.board)
+            
         # TODO in reality, we would await for input here, managing time, timeouts and so on
         prompt = f"\n{current_color.name.capitalize()}'s turn:"
         print(prompt)
@@ -67,7 +83,6 @@ class Game:
         
         # move the piece
         moved = self.engine.move_piece(from_pos, to_pos)
-        print(moved)
         # at the end 
         self.state.switch_player()
         # TODO check end conditions, if check then check checkmate

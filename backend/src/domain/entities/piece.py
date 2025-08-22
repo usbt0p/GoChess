@@ -33,7 +33,7 @@ class Piece(ABC):
     ) -> list[Position]:
         moves = []
         for dr, dc in directions:
-            for i in range(1, board._size):
+            for i in range(1, board.size):
                 row, col = position.row + i * dr, position.col + i * dc
                 if not board.is_valid_position(Position(row, col)):
                     break

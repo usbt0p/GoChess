@@ -2,8 +2,9 @@ from ..entities.game_state import GameState
 from ..value_objects.position import Position
 from ..entities.piece import Piece
 from .validators import Validator
-from ..exceptions.game_error import InvalidMoveError
+from ..exceptions.game_error import *
 
+from ..services.validators import is_capture, CheckValidator
 
 class GoChessEngine:
     """The main engine for the Go-Chess game."""
@@ -11,7 +12,6 @@ class GoChessEngine:
     def __init__(self, game_state: GameState, validators: list[Validator]):
         self._game_state = game_state
         self._validators = validators
-        self.board = game_state.board
 
     def place_piece(self, piece: Piece, position: Position) -> bool:
         """A placement is an introducion of a new piece on the board.
@@ -30,9 +30,14 @@ class GoChessEngine:
         moving is an atomic operation, it either happens at once or it doesn't."""
 
         # TODO Validation logic will be added here
-        # this should be offloaded to a validator
+        # TODO validators are held in a list, and share the same interface
+        # except for the arguments they take
+        # we can iterate and pass all the arguments, and let them sort it out
+        # or we can modify in some way the interface to accept the game state which has the board 
 
-        piece = self.board.get_piece(from_pos)
+        # TODO this should be offloaded to a validator until next todo
+        piece = self._game_state.board.get_piece(from_pos)
+        print("Piece at pos: ", piece)
         if not piece:
             raise InvalidMoveError("No piece at the source position")
         
@@ -40,11 +45,35 @@ class GoChessEngine:
             raise InvalidMoveError("It's not your turn to move this piece")
     
         # Check if the move is valid
-        if to_pos not in piece.get_possible_moves(from_pos, self.board):
+        possible_moves = piece.get_possible_moves(from_pos, self._game_state.board)
+        print("Possible moves: ", [pos.algebraic() for pos in possible_moves])
+        if to_pos not in possible_moves:
             raise InvalidMoveError("Invalid move for this piece")
+
+        if is_capture(self._game_state.board, to_pos, piece.color):
+            # Handle capture logic
+            print(f"Capture detected from {piece} at {to_pos.algebraic()}")
+
+        check = CheckValidator()
+        # TODO problem, the move is not yet made, so the board state is not updated
+        # so the check validator will not work as intended
+        temp = self._game_state.board.copy() # make a copy of the board
+        temp.move_piece(from_pos, to_pos) # make the move on the copy
+        if check.validate(temp, piece.color):
+            raise IllegalMoveError("Move would place or leave king in check")
+
 
         # after all is good, move the piece
         self._game_state.board.move_piece(from_pos, to_pos)
+
+        # see if the move gives check AFTER a valid state is reached
+        print("Checking for check...")
+        if check.validate(self._game_state.board, ~piece.color):
+            print(f"Move results in check to {(~piece.color).name.capitalize()}")
+
+
+        # TODO until here
+
         return True
     
     

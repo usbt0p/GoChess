@@ -13,7 +13,7 @@ class MockPiece(Piece):
 
 def test_board_initialization():
     board = Board(size=8)
-    assert board._size == 8
+    assert board.size == 8
     assert len(board._grid) == 8
     assert all(all(cell is None for cell in row) for row in board._grid)
 

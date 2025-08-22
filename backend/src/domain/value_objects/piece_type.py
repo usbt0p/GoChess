@@ -4,6 +4,10 @@ class Color(Enum):
     WHITE = 0
     BLACK = 1
 
+    def __invert__(self):
+        '''Finally, a use for the ~ operator'''
+        return Color.BLACK if self == Color.WHITE else Color.WHITE
+
 class PieceType(Enum):
     PAWN = 0
     KNIGHT = auto()
