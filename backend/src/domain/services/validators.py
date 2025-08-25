@@ -66,6 +66,18 @@ class CheckValidator(Validator):
 
         opponent_color = Color.WHITE if player_color == Color.BLACK else Color.BLACK
         return is_square_attacked_by(board, king_pos, opponent_color)
+    
+    def validate_next_move(self, board: Board, from_pos: Position, to_pos: Position, player_color: Color) -> bool:
+        """Checks if moving a piece from from_pos to to_pos would leave the king in check."""
+        # Make the move on a copy of the board
+        temp_board = board.copy()
+        piece = temp_board.get_piece(from_pos)
+        if not piece or piece.color != player_color:
+            return False  # Invalid move
+        temp_board.move_piece(from_pos, to_pos)
+        return self.validate(temp_board, player_color)
+    
+
 
 
 # TODO: Implement other specific rule validators

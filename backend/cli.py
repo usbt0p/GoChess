@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from src.domain.services.game import Game
 from src.domain.value_objects.position import Position
-from src.domain.exceptions.game_error import InvalidMoveError
+from src.domain.exceptions.game_error import InvalidMoveError, IllegalMoveError
 
 def main():
     """Main function to run the console game."""
@@ -24,7 +24,7 @@ def main():
         try:
             game.step()
 
-        except InvalidMoveError as e:
+        except (InvalidMoveError, IllegalMoveError) as e:
             print(f"Invalid move: {e}, try again.")
 
         except KeyboardInterrupt as e:

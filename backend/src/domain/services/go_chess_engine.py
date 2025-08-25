@@ -55,18 +55,15 @@ class GoChessEngine:
             print(f"Capture detected from {piece} at {to_pos.algebraic()}")
 
         check = CheckValidator()
-        # TODO problem, the move is not yet made, so the board state is not updated
-        # so the check validator will not work as intended
-        temp = self._game_state.board.copy() # make a copy of the board
-        temp.move_piece(from_pos, to_pos) # make the move on the copy
-        if check.validate(temp, piece.color):
-            raise IllegalMoveError("Move would place or leave king in check")
 
+        # simulate the move and check if the current player's king would be in check
+        if check.validate_next_move(self._game_state.board, from_pos, to_pos, piece.color):
+            raise InvalidMoveError("Move would leave king in check")
 
         # after all is good, move the piece
         self._game_state.board.move_piece(from_pos, to_pos)
 
-        # see if the move gives check AFTER a valid state is reached
+        # see if the move gives check to the opposing king AFTER a valid state is reached
         print("Checking for check...")
         if check.validate(self._game_state.board, ~piece.color):
             print(f"Move results in check to {(~piece.color).name.capitalize()}")

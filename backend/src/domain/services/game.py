@@ -15,8 +15,8 @@ class Game:
 
     def __init__(self, config):
         # TODO use config to set up the game
-        self.board = Board()
-        self.state = GameState(self.board, Color.WHITE)
+        board = Board()
+        self.state = GameState(board, Color.WHITE)
 
         # TODO populate validator according to the config
         self.engine = GoChessEngine(self.state, [
@@ -73,7 +73,7 @@ class Game:
         
         # check whose turn it is
         current_color = self.state.current_player_color
-        print(self.board)
+        print(self.state.board)
             
         # TODO in reality, we would await for input here, managing time, timeouts and so on
         prompt = f"\n{current_color.name.capitalize()}'s turn:"
