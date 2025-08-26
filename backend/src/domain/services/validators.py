@@ -55,7 +55,7 @@ def is_capture(board: Board, position: Position, attacker_color: Color) -> bool:
 
 # --- Validator Classes ---
 
-class CheckValidator(Validator):
+class CheckNowValidator(Validator):
     """Validates if a player is currently in check."""
 
     def validate(self, board: Board, player_color: Color) -> bool:
@@ -67,7 +67,10 @@ class CheckValidator(Validator):
         opponent_color = Color.WHITE if player_color == Color.BLACK else Color.BLACK
         return is_square_attacked_by(board, king_pos, opponent_color)
     
-    def validate_next_move(self, board: Board, from_pos: Position, to_pos: Position, player_color: Color) -> bool:
+
+class CheckNextValidator(Validator):
+
+    def validate(self, board: Board, from_pos: Position, to_pos: Position, player_color: Color) -> bool:
         """Checks if moving a piece from from_pos to to_pos would leave the king in check."""
         # Make the move on a copy of the board
         temp_board = board.copy()
@@ -75,7 +78,8 @@ class CheckValidator(Validator):
         if not piece or piece.color != player_color:
             return False  # Invalid move
         temp_board.move_piece(from_pos, to_pos)
-        return self.validate(temp_board, player_color)
+        check = CheckNowValidator()
+        return check.validate(temp_board, player_color)
     
 
 

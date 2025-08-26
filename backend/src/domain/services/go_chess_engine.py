@@ -1,10 +1,8 @@
 from ..entities.game_state import GameState
 from ..value_objects.position import Position
 from ..entities.piece import Piece
-from .validators import Validator
+from .validators import CheckNextValidator, Validator, is_capture, CheckNowValidator
 from ..exceptions.game_error import *
-
-from ..services.validators import is_capture, CheckValidator
 
 class GoChessEngine:
     """The main engine for the Go-Chess game."""
@@ -54,10 +52,11 @@ class GoChessEngine:
             # Handle capture logic
             print(f"Capture detected from {piece} at {to_pos.algebraic()}")
 
-        check = CheckValidator()
+        check_now = CheckNowValidator()
+        check_next = CheckNextValidator()
 
         # simulate the move and check if the current player's king would be in check
-        if check.validate_next_move(self._game_state.board, from_pos, to_pos, piece.color):
+        if check_next.validate(self._game_state.board, from_pos, to_pos, piece.color):
             raise InvalidMoveError("Move would leave king in check")
 
         # after all is good, move the piece
@@ -65,7 +64,7 @@ class GoChessEngine:
 
         # see if the move gives check to the opposing king AFTER a valid state is reached
         print("Checking for check...")
-        if check.validate(self._game_state.board, ~piece.color):
+        if check_now.validate(self._game_state.board, ~piece.color):
             print(f"Move results in check to {(~piece.color).name.capitalize()}")
 
 

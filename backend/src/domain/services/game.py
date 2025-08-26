@@ -6,7 +6,7 @@ from src.domain.value_objects.piece_type import Color
 from src.domain.value_objects.position import Position
 
 from src.domain.services.go_chess_engine import GoChessEngine
-from src.domain.services.validators import CheckValidator
+from src.domain.services.validators import CheckNowValidator
 
 
         
@@ -20,7 +20,7 @@ class Game:
 
         # TODO populate validator according to the config
         self.engine = GoChessEngine(self.state, [
-            CheckValidator()
+            CheckNowValidator()
         ])
         self._build()
 
