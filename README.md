@@ -45,17 +45,22 @@ Also, if you want to "playtest", text me and we can try somehow to play a game!
 - [x] domain entities
 - [x] values / types
 - [x] Piece movement logic
+- [ ] special moves logic:
+    - [ ] Castling
+    - [x] En passant
+    - [ ] Promotion
 - [ ] piece placement logic
 - [ ] movement validators
 - [ ] placement validators
+- [ ] validators for checks, checkmates, stalemates, promotion, captures
 
 - [ ] Ruleset configuration system 
 - [x] CLI for testing
 - [ ] More unit tests
-- [ ] validators for checks, checkmates, stalemates, promotion
 - [ ] logging games using algebraic notation
 - [ ] time system and clocks
 
 ### Future
 - [ ] develop s simple gui
+- [ ] get api working on localhost
 - [ ] Web app for playing online
