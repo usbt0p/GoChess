@@ -24,6 +24,13 @@ class Board:
             self._grid[position.row][position.col] = piece
         else:
             raise ValueError("Invalid board position")
+        
+    def remove_piece(self, position: Position):
+        
+        if self.is_valid_position(position):
+            self._grid[position.row][position.col] = None
+        else:
+            raise ValueError("Invalid board position")
 
     def get_piece(self, position: Position):
         
