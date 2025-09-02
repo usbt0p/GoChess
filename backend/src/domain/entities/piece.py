@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from ..value_objects.piece_type import PieceType, Color
 from ..value_objects.position import Position
 from ..entities.board import Board
+from ..entities.game_state import GameState
 
 
 class Piece(ABC):
@@ -20,7 +21,7 @@ class Piece(ABC):
         return self._color
 
     @abstractmethod
-    def get_possible_moves(self, position: Position, board: Board) -> list[Position]:
+    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
         """
         Returns a list of pseudo-legal moves for the piece.
         Pseudo-legal moves are all possible moves a piece can make,
@@ -68,10 +69,11 @@ class Pawn(Piece):
     def __init__(self, color: Color):
         super().__init__(PieceType.PAWN, color)
 
-    def get_possible_moves(self, position: Position, board: Board) -> list[Position]:
+    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
         moves = []
         direction = -1 if self.color == Color.WHITE else 1
         start_row = 6 if self.color == Color.WHITE else 1
+        board = game_state.board
 
         # 1. Forward move
         one_step = Position(position.row + direction, position.col)
@@ -95,7 +97,20 @@ class Pawn(Piece):
                 if target_piece and target_piece.color != self.color:
                     moves.append(capture_pos)
 
-        # TODO: En passant and promotion logic
+        # 4. En passant
+        if game_state.en_passant_target:
+            # The capturing pawn must be on the 5th rank for White or 4th for Black
+            correct_rank = (self.color == Color.WHITE and position.row == 3) or \
+                           (self.color == Color.BLACK and position.row == 4)
+
+            if correct_rank:
+                # The target square must be diagonal to the current pawn's file
+                if abs(position.col - game_state.en_passant_target.col) == 1:
+                    # The target square must be on the correct destination rank
+                    if (self.color == Color.WHITE and game_state.en_passant_target.row == position.row - 1) or \
+                       (self.color == Color.BLACK and game_state.en_passant_target.row == position.row + 1):
+                        moves.append(game_state.en_passant_target)
+        
         return moves
 
 
@@ -103,12 +118,13 @@ class Knight(Piece):
     def __init__(self, color: Color):
         super().__init__(PieceType.KNIGHT, color)
 
-    def get_possible_moves(self, position: Position, board: Board) -> list[Position]:
+    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
         moves = []
         deltas = [
             (1, 2), (1, -2), (-1, 2), (-1, -2),
             (2, 1), (2, -1), (-2, 1), (-2, -1),
         ]
+        board = game_state.board
 
         for dr, dc in deltas:
             target_pos = Position(position.row + dr, position.col + dc)
@@ -123,42 +139,43 @@ class Bishop(Piece):
     def __init__(self, color: Color):
         super().__init__(PieceType.BISHOP, color)
 
-    def get_possible_moves(self, position: Position, board: Board) -> list[Position]:
+    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
         directions = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
-        return self._get_sliding_moves(position, board, directions)
+        return self._get_sliding_moves(position, game_state.board, directions)
 
 
 class Rook(Piece):
     def __init__(self, color: Color):
         super().__init__(PieceType.ROOK, color)
 
-    def get_possible_moves(self, position: Position, board: Board) -> list[Position]:
+    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
         directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-        return self._get_sliding_moves(position, board, directions)
+        return self._get_sliding_moves(position, game_state.board, directions)
 
 
 class Queen(Piece):
     def __init__(self, color: Color):
         super().__init__(PieceType.QUEEN, color)
 
-    def get_possible_moves(self, position: Position, board: Board) -> list[Position]:
+    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
         directions = [
             (1, 0), (-1, 0), (0, 1), (0, -1),  # Rook moves
             (1, 1), (1, -1), (-1, 1), (-1, -1),  # Bishop moves
         ]
-        return self._get_sliding_moves(position, board, directions)
+        return self._get_sliding_moves(position, game_state.board, directions)
 
 
 class King(Piece):
     def __init__(self, color: Color):
         super().__init__(PieceType.KING, color)
 
-    def get_possible_moves(self, position: Position, board: Board) -> list[Position]:
+    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
         moves = []
         deltas = [
             (1, 0), (-1, 0), (0, 1), (0, -1),
             (1, 1), (1, -1), (-1, 1), (-1, -1),
         ]
+        board = game_state.board
 
         for dr, dc in deltas:
             target_pos = Position(position.row + dr, position.col + dc)

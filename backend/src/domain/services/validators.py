@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from ..entities.board import Board
+from ..entities.game_state import GameState
 from ..entities.piece import Pawn
 from ..value_objects.position import Position
 from ..value_objects.piece_type import PieceType, Color
@@ -14,8 +15,9 @@ class Validator(ABC):
 
 # --- Validation Helper Functions ---
 
-def find_king(board: Board, color: Color) -> Position | None:
+def find_king(game_state: GameState, color: Color) -> Position | None:
     """Finds the position of the king of a given color on the board."""
+    board = game_state.board
     for r in range(board.size):
         for c in range(board.size):
             pos = Position(r, c)
@@ -25,10 +27,11 @@ def find_king(board: Board, color: Color) -> Position | None:
     return None
 
 
-def is_square_attacked_by(board: Board, position: Position, attacker_color: Color) -> bool:
+def is_square_attacked_by(game_state: GameState, position: Position, attacker_color: Color) -> bool:
     """Checks if a square is under attack by any piece of the attacker's color."""
     # scan all pieces of the attacker color
     # and check if any can move to the position
+    board = game_state.board
     for r in range(board.size):
         for c in range(board.size):
             attacker_pos = Position(r, c)
@@ -37,7 +40,7 @@ def is_square_attacked_by(board: Board, position: Position, attacker_color: Colo
             if piece is None or piece.color != attacker_color:
                 continue
 
-            possible_moves = piece.get_possible_moves(attacker_pos, board)
+            possible_moves = piece.get_possible_moves(attacker_pos, game_state)
             if position in possible_moves:
                 if isinstance(piece, Pawn):
                     # A pawn only attacks diagonally.
@@ -47,39 +50,60 @@ def is_square_attacked_by(board: Board, position: Position, attacker_color: Colo
                     return True
     return False
 
-def is_capture(board: Board, position: Position, attacker_color: Color) -> bool:
+def is_capture(game_state: GameState, position: Position, attacker_color: Color) -> bool:
     """Checks if a square is occupied by an opponent's piece (i.e., a capture)."""
-    piece = board.get_piece(position)
+    piece = game_state.board.get_piece(position)
     return piece is not None and piece.color != attacker_color
 
+def is_en_passant_capture(game_state: GameState, from_pos: Position, to_pos: Position, attacker_color: Color) -> bool:
+    """Checks if a move is an en passant capture."""
+    piece = game_state.board.get_piece(from_pos)
+    if not piece or piece.type != PieceType.PAWN or piece.color != attacker_color:
+        return False
+
+    # if the pawn has moved diagonally to an empty square
+    if abs(from_pos.col - to_pos.col) == 1 and from_pos.row + (1 if attacker_color == Color.BLACK else -1) == to_pos.row:
+        # and  the target square is the en passant target
+        if game_state.en_passant_target and to_pos == game_state.en_passant_target:
+            return True
+    return False
 
 # --- Validator Classes ---
 
 class CheckNowValidator(Validator):
     """Validates if a player is currently in check."""
 
-    def validate(self, board: Board, player_color: Color) -> bool:
+    def validate(self, game_state: GameState, player_color: Color) -> bool:
         """Checks if the king of the specified color is under attack."""
-        king_pos = find_king(board, player_color)
+        king_pos = find_king(game_state, player_color)
         if not king_pos:
             return False  # No king, no check
 
         opponent_color = Color.WHITE if player_color == Color.BLACK else Color.BLACK
-        return is_square_attacked_by(board, king_pos, opponent_color)
+        return is_square_attacked_by(game_state, king_pos, opponent_color)
     
 
 class CheckNextValidator(Validator):
 
-    def validate(self, board: Board, from_pos: Position, to_pos: Position, player_color: Color) -> bool:
+    def validate(self, game_state: GameState, from_pos: Position, to_pos: Position, player_color: Color) -> bool:
         """Checks if moving a piece from from_pos to to_pos would leave the king in check."""
         # Make the move on a copy of the board
-        temp_board = board.copy()
+        temp_board = game_state.board.copy()
         piece = temp_board.get_piece(from_pos)
         if not piece or piece.color != player_color:
             return False  # Invalid move
         temp_board.move_piece(from_pos, to_pos)
+        
+        # Create a temporary game state for validation
+        temp_game_state = GameState(
+            board=temp_board,
+            current_player_color=game_state.current_player_color,
+            en_passant_target=game_state.en_passant_target,
+            castling_rights=game_state.castling_rights
+        )
+
         check = CheckNowValidator()
-        return check.validate(temp_board, player_color)
+        return check.validate(temp_game_state, player_color)
     
 
 

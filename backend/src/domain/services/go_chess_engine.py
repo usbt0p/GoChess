@@ -1,8 +1,9 @@
 from ..entities.game_state import GameState
 from ..value_objects.position import Position
 from ..entities.piece import Piece
-from .validators import CheckNextValidator, Validator, is_capture, CheckNowValidator
+from .validators import *
 from ..exceptions.game_error import *
+from ..value_objects.piece_type import Color, PieceType
 
 class GoChessEngine:
     """The main engine for the Go-Chess game."""
@@ -43,31 +44,56 @@ class GoChessEngine:
             raise InvalidMoveError("It's not your turn to move this piece")
     
         # Check if the move is valid
-        possible_moves = piece.get_possible_moves(from_pos, self._game_state.board)
+        possible_moves = piece.get_possible_moves(from_pos, self._game_state)
         print("Possible moves: ", [pos.algebraic() for pos in possible_moves])
         if to_pos not in possible_moves:
             raise InvalidMoveError("Invalid move for this piece")
 
-        if is_capture(self._game_state.board, to_pos, piece.color):
-            # Handle capture logic
-            print(f"Capture detected from {piece} at {to_pos.algebraic()}")
-
+        # Validators for check conditions
         check_now = CheckNowValidator()
         check_next = CheckNextValidator()
 
         # simulate the move and check if the current player's king would be in check
-        if check_next.validate(self._game_state.board, from_pos, to_pos, piece.color):
+        if check_next.validate(self._game_state, from_pos, to_pos, piece.color):
             raise InvalidMoveError("Move would leave king in check")
+
+        # get info and do sanity checks
+        if is_capture(self._game_state, to_pos, piece.color):
+            # Handle capture logic
+            print(f"Capture detected from {piece} at {to_pos.algebraic()}")
+
+        if self._game_state.en_passant_target: # only do this if en passant is possible       
+            if is_en_passant_capture(self._game_state, from_pos, to_pos, piece.color):
+                print(f"En Passant capture detected by {piece} at {to_pos.algebraic()}")
+                
+                # Remove the captured pawn
+                captured_pawn_pos = Position(from_pos.row, to_pos.col)
+                self._game_state.board.remove_piece(captured_pawn_pos)
+                print(f"Captured pawn removed from {captured_pawn_pos.algebraic()}")
+                
+                # Clear en passant target after the capture
+                self._game_state.en_passant_target = None
+
+
+        # see if the move gives check to the opposing king AFTER a valid state is reached
+        # just to inform the players
+        print("Checking for check...")
+        if check_now.validate(self._game_state, ~piece.color):
+            print(f"Move results in check to {(~piece.color).name.capitalize()}")
 
         # after all is good, move the piece
         self._game_state.board.move_piece(from_pos, to_pos)
 
-        # see if the move gives check to the opposing king AFTER a valid state is reached
-        print("Checking for check...")
-        if check_now.validate(self._game_state.board, ~piece.color):
-            print(f"Move results in check to {(~piece.color).name.capitalize()}")
-
-
+        # update states like en passant target and castling rights
+        if piece.type == PieceType.PAWN:
+            # if a pawn moved two squares forward, set the en passant target
+            print("validating en passant...", abs(from_pos.row - to_pos.row) == 2)
+            if abs(from_pos.row - to_pos.row) == 2:
+                direction = -1 if piece.color == Color.WHITE else 1
+                self._game_state.en_passant_target = Position(from_pos.row + direction, from_pos.col)
+            else:
+                self._game_state.en_passant_target = None
+        
         # TODO until here
 
         return True

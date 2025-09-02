@@ -20,6 +20,7 @@ class Game:
 
         # TODO populate validator according to the config
         self.engine = GoChessEngine(self.state, [
+            # TODO
             CheckNowValidator()
         ])
         self._build()
@@ -57,15 +58,25 @@ class Game:
         for piece_type, color, position in piece_positions:
             self.engine.place_piece(piece_type(color), position)
 
-        # premove e4 and e5 for testing
+        # premove some moves for testing
         # TODO remove this in production
-        self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
+        '''self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
         self.state.switch_player() # TODO maybe this should be done within moving, or might cause problems
         self.engine.move_piece(Position.from_algebraic("e7"), Position.from_algebraic("e5"))
         self.state.switch_player() 
         self.engine.move_piece(Position.from_algebraic("f2"), Position.from_algebraic("f4"))
         self.state.switch_player()  
         self.engine.move_piece(Position.from_algebraic("d8"), Position.from_algebraic("h4"))
+        self.state.switch_player()'''
+
+        # test en passant capture
+        self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
+        self.state.switch_player() 
+        self.engine.move_piece(Position.from_algebraic("a7"), Position.from_algebraic("a5"))
+        self.state.switch_player()
+        self.engine.move_piece(Position.from_algebraic("e4"), Position.from_algebraic("e5"))
+        self.state.switch_player()
+        self.engine.move_piece(Position.from_algebraic("d7"), Position.from_algebraic("d5"))
         self.state.switch_player()
 
     def step(self):
@@ -85,6 +96,7 @@ class Game:
         moved = self.engine.move_piece(from_pos, to_pos)
         # at the end 
         self.state.switch_player()
+
         # TODO check end conditions, if check then check checkmate
         # stalemate: no valid moves left for any piece of the current player
 
