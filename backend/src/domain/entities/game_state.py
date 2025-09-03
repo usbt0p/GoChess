@@ -31,14 +31,14 @@ class GameState:
             self.castling_rights = castling_rights
         else:
             self.castling_rights = {
-                Color.WHITE: {PieceType.KING: True, PieceType.QUEEN: True},
-                Color.BLACK: {PieceType.KING: True, PieceType.QUEEN: True}
+                Color.WHITE: {'kingside': True, 'queenside': True},
+                Color.BLACK: {'kingside': True, 'queenside': True}
             }
         
         # if the player's move is a castle, indicate with the piece side (king or queen)
         self.castle_next_move = {
-            Color.WHITE: {PieceType.KING: None, PieceType.QUEEN: None}, 
-            Color.BLACK: {PieceType.KING: None, PieceType.QUEEN: None}
+            Color.WHITE: {'kingside': None, 'queenside': None}, 
+            Color.BLACK: {'kingside': None, 'queenside': None}
         }
 
     def switch_phase(self):

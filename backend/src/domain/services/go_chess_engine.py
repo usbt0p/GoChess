@@ -94,58 +94,29 @@ class GoChessEngine:
             else:
                 self._game_state.en_passant_target = None
         
-        possible_castles = self._game_state.castle_next_move[piece.color]
-        # use the castle_next_move to determine the available castles and move the rook accordingly
+        if piece.type == PieceType.KING:
+            self._game_state.castling_rights[piece.color]['kingside'] = False
+            self._game_state.castling_rights[piece.color]['queenside'] = False
+            # check if the move was a castle
+            if abs(from_pos.col - to_pos.col) == 2:
+                # kingside
+                if to_pos.col > from_pos.col:
+                    rook_from = Position(from_pos.row, 7)
+                    rook_to = Position(from_pos.row, 5)
+                # queenside
+                else:
+                    rook_from = Position(from_pos.row, 0)
+                    rook_to = Position(from_pos.row, 3)
+                self._game_state.board.move_piece(rook_from, rook_to)
 
-        # TODO pending: A player may not castle out of, through, or into check.
-       
-        if possible_castles[PieceType.KING] is not None:
-            # move the rook, king already moves by itself to the correct position (relative to king)
-            if possible_castles[PieceType.KING] == Position(from_pos.row, from_pos.col + 2):
-                rook_from_pos = Position(from_pos.row, from_pos.col + 3)
-                rook_to_pos = Position(from_pos.row, from_pos.col + 1)
-            elif possible_castles[PieceType.KING] == Position(from_pos.row, from_pos.col - 2):
-                rook_from_pos = Position(from_pos.row, from_pos.col - 4)
-                rook_to_pos = Position(from_pos.row, from_pos.col - 1)
-            
-            rook = self._game_state.board.get_piece(rook_from_pos)
-            if rook and rook.type == PieceType.ROOK and rook.color == piece.color:
-                self._game_state.board.move_piece(rook_from_pos, rook_to_pos)
-                print(f"Castling performed: Rook moved from {rook_from_pos.algebraic()} to {rook_to_pos.algebraic()}")
-
-            else:
-                raise InvalidMoveError("Invalid castling move: Rook not in the correct position")
-            
-        # update castling rights if a king or rook has moved 
-        match piece.type:
-            case PieceType.KING:
-                self._game_state.castling_rights[piece.color][PieceType.KING] = False
-                self._game_state.castling_rights[piece.color][PieceType.QUEEN] = False
-            case PieceType.ROOK:
-                if from_pos.col == 0:
-                    self._game_state.castling_rights[piece.color][PieceType.QUEEN] = False
-                elif from_pos.col == self._game_state.board.size - 1:
-                    self._game_state.castling_rights[piece.color][PieceType.KING] = False  
-                  
-
-        # if piece.type == PieceType.KING or piece.type == PieceType.ROOK:
-        #     # update castling rights
-        #     self._game_state.castling_rights[piece.color][piece.type] = False
-            
-        #     # if the move is a castle, move the rook as well
-        #     if piece.type == PieceType.KING and abs(from_pos.col - to_pos.col) == 2:
-        #         rook_from_col = 0 if to_pos.col < from_pos.col else self._game_state.board.size - 1
-        #         rook_to_col = from_pos.col - 1 if to_pos.col < from_pos.col else from_pos.col + 1
-        #         rook_from_pos = Position(from_pos.row, rook_from_col)
-        #         rook_to_pos = Position(from_pos.row, rook_to_col)
-                
-        #         rook = self._game_state.board.get_piece(rook_from_pos)
-        #         if rook and rook.type == PieceType.ROOK and rook.color == piece.color:
-        #             self._game_state.board.move_piece(rook_from_pos, rook_to_pos)
-        #             print(f"Castling performed: Rook moved from {rook_from_pos.algebraic()} to {rook_to_pos.algebraic()}")
-        #         else:
-        #             raise InvalidMoveError("Invalid castling move: Rook not in the correct position")
+        if piece.type == PieceType.ROOK:
+            if from_pos.col == 0 and from_pos.row == (7 if piece.color == Color.WHITE else 0):
+                self._game_state.castling_rights[piece.color]['queenside'] = False
+            elif from_pos.col == 7 and from_pos.row == (7 if piece.color == Color.WHITE else 0):
+                self._game_state.castling_rights[piece.color]['kingside'] = False
+        
+        # TODO until here
 
         return True
-    
-    
+
+

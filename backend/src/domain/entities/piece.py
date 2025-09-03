@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from ..value_objects.piece_type import PieceType, Color
+from ..services.validators import is_square_attacked_by
 from ..value_objects.position import Position
 from ..entities.board import Board
 from ..entities.game_state import GameState
@@ -21,7 +22,9 @@ class Piece(ABC):
         return self._color
 
     @abstractmethod
-    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
+    def get_possible_moves(
+        self, position: Position, game_state: GameState
+    ) -> list[Position]:
         """
         Returns a list of pseudo-legal moves for the piece.
         Pseudo-legal moves are all possible moves a piece can make,
@@ -53,11 +56,11 @@ class Piece(ABC):
 
     def __repr__(self) -> str:
         return f"{self.color.name.capitalize()} {self.type.name.capitalize()}"
-    
+
     def __str__(self):
-        '''Use the unicode chess character for the piece in the console'''
-        
-        chess_set = '♙♘♗♖♕♔♟♞♝♜♛♚'
+        """Use the unicode chess character for the piece in the console"""
+
+        chess_set = "♙♘♗♖♕♔♟♞♝♜♛♚"
         # assuming the background is black... so white pieces are actually black
         if self.color == Color.WHITE:
             return chess_set[self.type.value + 6]
@@ -69,7 +72,9 @@ class Pawn(Piece):
     def __init__(self, color: Color):
         super().__init__(PieceType.PAWN, color)
 
-    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
+    def get_possible_moves(
+        self, position: Position, game_state: GameState
+    ) -> list[Position]:
         moves = []
         direction = -1 if self.color == Color.WHITE else 1
         start_row = 6 if self.color == Color.WHITE else 1
@@ -101,17 +106,23 @@ class Pawn(Piece):
         # TODO if this becomes a propblem, offload en passant logic to a validator and just read from the game state here
         if game_state.en_passant_target:
             # The capturing pawn must be on the 5th rank for White or 4th for Black
-            correct_rank = (self.color == Color.WHITE and position.row == 3) or \
-                           (self.color == Color.BLACK and position.row == 4)
+            correct_rank = (self.color == Color.WHITE and position.row == 3) or (
+                self.color == Color.BLACK and position.row == 4
+            )
 
             if correct_rank:
                 # The target square must be diagonal to the current pawn's file
                 if abs(position.col - game_state.en_passant_target.col) == 1:
                     # The target square must be on the correct destination rank
-                    if (self.color == Color.WHITE and game_state.en_passant_target.row == position.row - 1) or \
-                       (self.color == Color.BLACK and game_state.en_passant_target.row == position.row + 1):
+                    if (
+                        self.color == Color.WHITE
+                        and game_state.en_passant_target.row == position.row - 1
+                    ) or (
+                        self.color == Color.BLACK
+                        and game_state.en_passant_target.row == position.row + 1
+                    ):
                         moves.append(game_state.en_passant_target)
-        
+
         return moves
 
 
@@ -119,11 +130,19 @@ class Knight(Piece):
     def __init__(self, color: Color):
         super().__init__(PieceType.KNIGHT, color)
 
-    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
+    def get_possible_moves(
+        self, position: Position, game_state: GameState
+    ) -> list[Position]:
         moves = []
         deltas = [
-            (1, 2), (1, -2), (-1, 2), (-1, -2),
-            (2, 1), (2, -1), (-2, 1), (-2, -1),
+            (1, 2),
+            (1, -2),
+            (-1, 2),
+            (-1, -2),
+            (2, 1),
+            (2, -1),
+            (-2, 1),
+            (-2, -1),
         ]
         board = game_state.board
 
@@ -140,7 +159,9 @@ class Bishop(Piece):
     def __init__(self, color: Color):
         super().__init__(PieceType.BISHOP, color)
 
-    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
+    def get_possible_moves(
+        self, position: Position, game_state: GameState
+    ) -> list[Position]:
         directions = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
         return self._get_sliding_moves(position, game_state.board, directions)
 
@@ -149,7 +170,9 @@ class Rook(Piece):
     def __init__(self, color: Color):
         super().__init__(PieceType.ROOK, color)
 
-    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
+    def get_possible_moves(
+        self, position: Position, game_state: GameState
+    ) -> list[Position]:
         directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         return self._get_sliding_moves(position, game_state.board, directions)
 
@@ -158,10 +181,18 @@ class Queen(Piece):
     def __init__(self, color: Color):
         super().__init__(PieceType.QUEEN, color)
 
-    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
+    def get_possible_moves(
+        self, position: Position, game_state: GameState
+    ) -> list[Position]:
         directions = [
-            (1, 0), (-1, 0), (0, 1), (0, -1),  # Rook moves
-            (1, 1), (1, -1), (-1, 1), (-1, -1),  # Bishop moves
+            (1, 0),
+            (-1, 0),
+            (0, 1),
+            (0, -1),  # Rook moves
+            (1, 1),
+            (1, -1),
+            (-1, 1),
+            (-1, -1),  # Bishop moves
         ]
         return self._get_sliding_moves(position, game_state.board, directions)
 
@@ -170,11 +201,22 @@ class King(Piece):
     def __init__(self, color: Color):
         super().__init__(PieceType.KING, color)
 
-    def get_possible_moves(self, position: Position, game_state: GameState) -> list[Position]:
+    def get_possible_moves(
+        self, position: Position, game_state: GameState, 
+        # this is added specifically to avoid recursion issues in validators
+        # (for example a king checking if the other king castles, which would call this method again)
+        include_castling=True 
+    ) -> list[Position]:
         moves = []
         deltas = [
-            (1, 0), (-1, 0), (0, 1), (0, -1),
-            (1, 1), (1, -1), (-1, 1), (-1, -1),
+            (1, 0),
+            (-1, 0),
+            (0, 1),
+            (0, -1),
+            (1, 1),
+            (1, -1),
+            (-1, 1),
+            (-1, -1),
         ]
         board = game_state.board
 
@@ -184,32 +226,46 @@ class King(Piece):
                 target_piece = board.get_piece(target_pos)
                 if target_piece is None or target_piece.color != self.color:
                     moves.append(target_pos)
-        
-        # TODO: Castling logic
-        # add in the movement a record of king moves and rook moves to validate castling rights in the movement loop in engine
-        # also, we'll need to check if the squares the king passes through are under attack
-        # if this becomes a problem, offload castling logic to a validator and just read from the game state here
-        castling_rights = game_state.castling_rights[self.color]
-        
-        if castling_rights[PieceType.KING]:
-            # Kingside castling
-            # cool use of the for-else construct!
-            for c in range(position.col + 1, board.size - 1):
-                if board.get_piece(Position(position.row, c)) is not None:
-                    break
-            else:
-                move = Position(position.row, board.size - 2)
-                moves.append(move) 
-                game_state.castle_next_move[self.color] = move
-        
-        if castling_rights[PieceType.QUEEN]:
-            # Queenside castling
-            for c in range(position.col - 1, 0, -1): # reverse to break on the first piece found
-                if board.get_piece(Position(position.row, c)) is not None:
-                    break
-            else:
-                move = Position(position.row, 2)
-                moves.append(move)
-                game_state.castle_next_move[self.color] = move
-        
+
+        if include_castling:
+            self._add_castling_moves(position, game_state, moves)
+
         return moves
+
+    def _add_castling_moves(
+        self, position: Position, game_state: GameState, moves: list[Position]
+    ):
+        # Check if king is in check
+        if is_square_attacked_by(game_state, position, ~self.color):
+            return
+
+        # Kingside castling
+        if game_state.castling_rights[self.color]["kingside"]:
+            # Check if path is clear
+            if (
+                game_state.board.get_piece(Position(position.row, 5)) is None
+                and game_state.board.get_piece(Position(position.row, 6)) is None
+            ):
+                # Check if squares king passes through are not attacked
+                if not is_square_attacked_by(
+                    game_state, Position(position.row, 5), ~self.color
+                ) and not is_square_attacked_by(
+                    game_state, Position(position.row, 6), ~self.color
+                ):
+                    moves.append(Position(position.row, 6))
+
+        # Queenside castling
+        if game_state.castling_rights[self.color]["queenside"]:
+            # Check if path is clear
+            if (
+                game_state.board.get_piece(Position(position.row, 1)) is None
+                and game_state.board.get_piece(Position(position.row, 2)) is None
+                and game_state.board.get_piece(Position(position.row, 3)) is None
+            ):
+                # Check if squares king passes through are not attacked
+                if not is_square_attacked_by(
+                    game_state, Position(position.row, 2), ~self.color
+                ) and not is_square_attacked_by(
+                    game_state, Position(position.row, 3), ~self.color
+                ):
+                    moves.append(Position(position.row, 2))
