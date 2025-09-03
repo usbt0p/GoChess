@@ -98,6 +98,7 @@ class Pawn(Piece):
                     moves.append(capture_pos)
 
         # 4. En passant
+        # TODO if this becomes a propblem, offload en passant logic to a validator and just read from the game state here
         if game_state.en_passant_target:
             # The capturing pawn must be on the 5th rank for White or 4th for Black
             correct_rank = (self.color == Color.WHITE and position.row == 3) or \
@@ -185,4 +186,30 @@ class King(Piece):
                     moves.append(target_pos)
         
         # TODO: Castling logic
+        # add in the movement a record of king moves and rook moves to validate castling rights in the movement loop in engine
+        # also, we'll need to check if the squares the king passes through are under attack
+        # if this becomes a problem, offload castling logic to a validator and just read from the game state here
+        castling_rights = game_state.castling_rights[self.color]
+        
+        if castling_rights[PieceType.KING]:
+            # Kingside castling
+            # cool use of the for-else construct!
+            for c in range(position.col + 1, board.size - 1):
+                if board.get_piece(Position(position.row, c)) is not None:
+                    break
+            else:
+                move = Position(position.row, board.size - 2)
+                moves.append(move) 
+                game_state.castle_next_move[self.color] = move
+        
+        if castling_rights[PieceType.QUEEN]:
+            # Queenside castling
+            for c in range(position.col - 1, 0, -1): # reverse to break on the first piece found
+                if board.get_piece(Position(position.row, c)) is not None:
+                    break
+            else:
+                move = Position(position.row, 2)
+                moves.append(move)
+                game_state.castle_next_move[self.color] = move
+        
         return moves

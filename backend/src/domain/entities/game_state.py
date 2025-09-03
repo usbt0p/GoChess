@@ -1,7 +1,7 @@
 from enum import Enum, auto
 from .board import Board
 from ..value_objects.position import Position
-from ..value_objects.piece_type import Color
+from ..value_objects.piece_type import Color, PieceType
 
 
 class GamePhase(Enum):
@@ -31,9 +31,15 @@ class GameState:
             self.castling_rights = castling_rights
         else:
             self.castling_rights = {
-                Color.WHITE: {'K': True, 'Q': True},
-                Color.BLACK: {'K': True, 'Q': True}
+                Color.WHITE: {PieceType.KING: True, PieceType.QUEEN: True},
+                Color.BLACK: {PieceType.KING: True, PieceType.QUEEN: True}
             }
+        
+        # if the player's move is a castle, indicate with the piece side (king or queen)
+        self.castle_next_move = {
+            Color.WHITE: {PieceType.KING: None, PieceType.QUEEN: None}, 
+            Color.BLACK: {PieceType.KING: None, PieceType.QUEEN: None}
+        }
 
     def switch_phase(self):
         """Switches the game phase."""

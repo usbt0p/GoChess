@@ -58,26 +58,59 @@ class Game:
         for piece_type, color, position in piece_positions:
             self.engine.place_piece(piece_type(color), position)
 
-        # premove some moves for testing
+        # testing normal movements and checks
         # TODO remove this in production
-        '''self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
-        self.state.switch_player() # TODO maybe this should be done within moving, or might cause problems
-        self.engine.move_piece(Position.from_algebraic("e7"), Position.from_algebraic("e5"))
-        self.state.switch_player() 
-        self.engine.move_piece(Position.from_algebraic("f2"), Position.from_algebraic("f4"))
-        self.state.switch_player()  
-        self.engine.move_piece(Position.from_algebraic("d8"), Position.from_algebraic("h4"))
-        self.state.switch_player()'''
+        # self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
+        # self.state.switch_player() # TODO maybe this should be done within moving, or might cause problems
+        # self.engine.move_piece(Position.from_algebraic("e7"), Position.from_algebraic("e5"))
+        # self.state.switch_player() 
+        # self.engine.move_piece(Position.from_algebraic("f2"), Position.from_algebraic("f4"))
+        # self.state.switch_player()  
+        # self.engine.move_piece(Position.from_algebraic("d8"), Position.from_algebraic("h4"))
+        # self.state.switch_player()
 
         # test en passant capture
-        self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
-        self.state.switch_player() 
-        self.engine.move_piece(Position.from_algebraic("a7"), Position.from_algebraic("a5"))
-        self.state.switch_player()
-        self.engine.move_piece(Position.from_algebraic("e4"), Position.from_algebraic("e5"))
+        # self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
+        # self.state.switch_player() 
+        # self.engine.move_piece(Position.from_algebraic("a7"), Position.from_algebraic("a5"))
+        # self.state.switch_player()
+        # self.engine.move_piece(Position.from_algebraic("e4"), Position.from_algebraic("e5"))
+        # self.state.switch_player()
+        # self.engine.move_piece(Position.from_algebraic("d7"), Position.from_algebraic("d5"))
+        # self.state.switch_player()
+
+        # test castling on kingside
+        # self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
+        # self.state.switch_player()
+        # self.engine.move_piece(Position.from_algebraic("g7"), Position.from_algebraic("g6"))
+        # self.state.switch_player()
+        # self.engine.move_piece(Position.from_algebraic("g1"), Position.from_algebraic("f3"))
+        # self.state.switch_player()
+        # self.engine.move_piece(Position.from_algebraic("g8"), Position.from_algebraic("f6"))
+        # self.state.switch_player()
+        # self.engine.move_piece(Position.from_algebraic("f1"), Position.from_algebraic("c4"))
+        # self.state.switch_player()
+        # self.engine.move_piece(Position.from_algebraic("f8"), Position.from_algebraic("g7"))
+        # self.state.switch_player()
+
+        # test castling on queenside
+        self.engine.move_piece(Position.from_algebraic("d2"), Position.from_algebraic("d4"))
         self.state.switch_player()
         self.engine.move_piece(Position.from_algebraic("d7"), Position.from_algebraic("d5"))
         self.state.switch_player()
+        self.engine.move_piece(Position.from_algebraic("c1"), Position.from_algebraic("g5"))
+        self.state.switch_player()
+        self.engine.move_piece(Position.from_algebraic("c8"), Position.from_algebraic("g4"))
+        self.state.switch_player()
+        self.engine.move_piece(Position.from_algebraic("b1"), Position.from_algebraic("c3"))
+        self.state.switch_player()
+        self.engine.move_piece(Position.from_algebraic("b8"), Position.from_algebraic("c6"))
+        self.state.switch_player()
+        self.engine.move_piece(Position.from_algebraic("d1"), Position.from_algebraic("d2"))
+        self.state.switch_player()
+        self.engine.move_piece(Position.from_algebraic("d8"), Position.from_algebraic("d7"))
+        self.state.switch_player()
+
 
     def step(self):
         """Advance the game state by one turn."""
