@@ -81,13 +81,13 @@ class GoChessEngine:
         if check_now.validate(self._game_state, ~piece.color):
             print(f"Move results in check to {(~piece.color).name.capitalize()}")
 
+        # TODO this should be done after everything else... or figure out a good order
         # after all is good, move the piece
         self._game_state.board.move_piece(from_pos, to_pos)
 
         # update states like en passant target and castling rights
         if piece.type == PieceType.PAWN:
             # if a pawn moved two squares forward, set the en passant target
-            print("validating en passant...", abs(from_pos.row - to_pos.row) == 2)
             if abs(from_pos.row - to_pos.row) == 2:
                 direction = -1 if piece.color == Color.WHITE else 1
                 self._game_state.en_passant_target = Position(from_pos.row + direction, from_pos.col)
@@ -114,9 +114,47 @@ class GoChessEngine:
                 self._game_state.castling_rights[piece.color]['queenside'] = False
             elif from_pos.col == 7 and from_pos.row == (7 if piece.color == Color.WHITE else 0):
                 self._game_state.castling_rights[piece.color]['kingside'] = False
-        
-        # TODO until here
+
+        # promotion triggers when a pawn move reaches the last rank
+        if piece.type == PieceType.PAWN:
+            if ((piece.color == Color.WHITE and to_pos.row == 0) 
+                or 
+                (piece.color == Color.BLACK and to_pos.row == 7)):
+                self.handle_promotion(to_pos, self.promotion_prompt)
 
         return True
+    
+    # TESTTTTTTT!!!!!!!!!!!!!!!!!!!!
 
+    def handle_promotion(self, position: Position, promotion_prompt : callable) -> bool:
+        """Handles the promotion of a pawn that has reached the last rank."""
+        piece = self._game_state.board.get_piece(position)
+        if not piece or piece.type != PieceType.PAWN:
+            raise InvalidMoveError("No pawn at the promotion position")
+        
+        new_piece_type = promotion_prompt()
+
+        if new_piece_type not in [PieceType.QUEEN, PieceType.ROOK, PieceType.BISHOP, PieceType.KNIGHT]:
+            raise ValueError("Invalid piece type for promotion")
+        
+        # Replace the pawn with the new piece
+        new_piece = Piece.create (new_piece_type, piece.color)
+        self._game_state.board.place_piece(new_piece, position)
+        return True
+
+    def promotion_prompt(self) -> PieceType:
+        # TODO move to services??
+        """A simple console-based prompt for choosing a promotion piece.
+        In a real application, this would be replaced with a GUI component or similar."""
+        
+        new_piece_type = input("Promote to (Q, R, B, N): ").strip().upper()
+        while True:
+            match new_piece_type:
+                case 'Q': new_piece_type = PieceType.QUEEN; break
+                case 'R': new_piece_type = PieceType.ROOK; break
+                case 'B': new_piece_type = PieceType.BISHOP; break
+                case 'N': new_piece_type = PieceType.KNIGHT; break
+                case _: raise ValueError("Invalid input for promotion")
+        
+        return new_piece_type
 

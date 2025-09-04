@@ -45,10 +45,10 @@ Also, if you want to "playtest", text me and we can try somehow to play a game!
 - [x] domain entities
 - [x] values / types
 - [x] Piece movement logic
-- [ ] special moves logic:
-    - [ ] Castling
+- [x] special moves logic:
+    - [x] Castling
     - [x] En passant
-    - [ ] Promotion
+    - [x] Promotion
 - [ ] piece placement logic
 - [ ] movement validators
 - [ ] placement validators

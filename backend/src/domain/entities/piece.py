@@ -53,6 +53,18 @@ class Piece(ABC):
                 else:
                     break  # Blocked by own piece
         return moves
+    
+    @classmethod
+    def create(cls, piece_type: PieceType, color: Color) -> 'Piece':
+        """Factory method to create a piece instance based on type and color."""
+        match piece_type:
+            case PieceType.PAWN: return Pawn(color)
+            case PieceType.KNIGHT: return Knight(color)
+            case PieceType.BISHOP: return Bishop(color)
+            case PieceType.ROOK: return Rook(color)
+            case PieceType.QUEEN: return Queen(color)
+            case PieceType.KING: return King(color)
+            case _: raise ValueError("Invalid piece type")
 
     def __repr__(self) -> str:
         return f"{self.color.name.capitalize()} {self.type.name.capitalize()}"
@@ -103,7 +115,7 @@ class Pawn(Piece):
                     moves.append(capture_pos)
 
         # 4. En passant
-        # TODO if this becomes a propblem, offload en passant logic to a validator and just read from the game state here
+        # TODO if this becomes a problem, offload en passant logic to a validator and just read from the game state here
         if game_state.en_passant_target:
             # The capturing pawn must be on the 5th rank for White or 4th for Black
             correct_rank = (self.color == Color.WHITE and position.row == 3) or (
@@ -122,6 +134,8 @@ class Pawn(Piece):
                         and game_state.en_passant_target.row == position.row + 1
                     ):
                         moves.append(game_state.en_passant_target)
+        
+        # 5. Promotion is offloaded to the engine          
 
         return moves
 

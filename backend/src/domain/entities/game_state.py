@@ -27,8 +27,9 @@ class GameState:
         else:
             self.en_passant_target: Position | None = None
         
+        ## Castling states
         if castling_rights:
-            self.castling_rights = castling_rights
+            self.castling_rights : dict[dict] = castling_rights
         else:
             self.castling_rights = {
                 Color.WHITE: {'kingside': True, 'queenside': True},
@@ -36,7 +37,7 @@ class GameState:
             }
         
         # if the player's move is a castle, indicate with the piece side (king or queen)
-        self.castle_next_move = {
+        self.castle_next_move : dict[dict] = {
             Color.WHITE: {'kingside': None, 'queenside': None}, 
             Color.BLACK: {'kingside': None, 'queenside': None}
         }
@@ -46,8 +47,7 @@ class GameState:
         if self.phase == GamePhase.PLACEMENT:
             self.phase = GamePhase.MOVEMENT
         else:
-            # TODO
-            pass
+            self.phase = GamePhase.PLACEMENT
     
     def switch_player(self):
         """Switches the current player."""
