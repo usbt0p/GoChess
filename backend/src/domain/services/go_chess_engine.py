@@ -20,6 +20,7 @@ class GoChessEngine:
         # TODO Validation logic will be added here
 
         # after all is good, place the piece
+        # this is the last step ideally
         self._game_state.board.place_piece(piece, position)
         return True
 
@@ -34,7 +35,9 @@ class GoChessEngine:
         # we can iterate and pass all the arguments, and let them sort it out
         # or we can modify in some way the interface to accept the game state which has the board 
 
-        # TODO this should be offloaded to a validator until next todo
+        # -------- MUST-HAVE VALIDATIONS BEFORE THE MOVE -----------
+
+        # TODO this should be offloaded to a validator until next "section"
         piece = self._game_state.board.get_piece(from_pos)
         print("Piece at pos: ", piece)
         if not piece:
@@ -50,17 +53,11 @@ class GoChessEngine:
             raise InvalidMoveError("Invalid move for this piece")
 
         # Validators for check conditions
-        check_now = CheckNowValidator()
         check_next = CheckNextValidator()
 
         # simulate the move and check if the current player's king would be in check
         if check_next.validate(self._game_state, from_pos, to_pos, piece.color):
             raise InvalidMoveError("Move would leave king in check")
-
-        # get info and do sanity checks
-        if is_capture(self._game_state, to_pos, piece.color):
-            # Handle capture logic
-            print(f"Capture detected from {piece} at {to_pos.algebraic()}")
 
         if self._game_state.en_passant_target: # only do this if en passant is possible       
             if is_en_passant_capture(self._game_state, from_pos, to_pos, piece.color):
@@ -74,30 +71,26 @@ class GoChessEngine:
                 # Clear en passant target after the capture
                 self._game_state.en_passant_target = None
 
-
-        # see if the move gives check to the opposing king AFTER a valid state is reached
-        # just to inform the players
-        print("Checking for check...")
-        if check_now.validate(self._game_state, ~piece.color):
-            print(f"Move results in check to {(~piece.color).name.capitalize()}")
-
         # TODO this should be done after everything else... or figure out a good order
         # after all is good, move the piece
         self._game_state.board.move_piece(from_pos, to_pos)
 
-        # update states like en passant target and castling rights
+        # -------- CHECKS MADE AFTER THE MOVE -----------
+
+        # update en passant target after a two-square pawn move
         if piece.type == PieceType.PAWN:
-            # if a pawn moved two squares forward, set the en passant target
+           
             if abs(from_pos.row - to_pos.row) == 2:
                 direction = -1 if piece.color == Color.WHITE else 1
                 self._game_state.en_passant_target = Position(from_pos.row + direction, from_pos.col)
             else:
                 self._game_state.en_passant_target = None
         
+        # update castling rights if a king or rook has moved
         if piece.type == PieceType.KING:
             self._game_state.castling_rights[piece.color]['kingside'] = False
             self._game_state.castling_rights[piece.color]['queenside'] = False
-            # check if the move was a castle
+            # check if the move was a castle, if so move the rook as well
             if abs(from_pos.col - to_pos.col) == 2:
                 # kingside
                 if to_pos.col > from_pos.col:
@@ -121,6 +114,17 @@ class GoChessEngine:
                 or 
                 (piece.color == Color.BLACK and to_pos.row == 7)):
                 self.handle_promotion(to_pos, self.promotion_prompt)
+
+        # get info and do sanity checks
+        if is_capture(self._game_state, to_pos, piece.color):
+            # Handle capture logic
+            print(f"Capture detected from {piece} at {to_pos.algebraic()}")
+
+        # see if the move gives check to the opposing king AFTER a valid state is reached
+        check_now = CheckNowValidator()
+        print("Checking for check...")
+        if check_now.validate(self._game_state, ~piece.color):
+            print(f"Move results in check to {(~piece.color).name.capitalize()}")
 
         return True
     

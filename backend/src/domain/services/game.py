@@ -131,7 +131,7 @@ class Game:
 
 
     def step(self):
-        """Advance the game state by one turn."""
+        """Advance the game turn by turn."""
         
         # check whose turn it is
         current_color = self.state.current_player_color

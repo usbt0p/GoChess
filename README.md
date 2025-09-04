@@ -49,10 +49,26 @@ Also, if you want to "playtest", text me and we can try somehow to play a game!
     - [x] Castling
     - [x] En passant
     - [x] Promotion
-- [ ] piece placement logic
-- [ ] movement validators
+
+- [ ] correct testing for:
+    - [x] board
+    - [ ] pieces
+    - [ ] positions
+    - [ ] game state changes, etc
+    - [ ] integtration (evolution of state and board trouch engine moves)
+    - [ ] validators
+
+- [ ] piece Placement logic
+- [ ] movement validators? 
 - [ ] placement validators
 - [ ] validators for checks, checkmates, stalemates, promotion, captures
+- [ ] basic game builer:
+    - [ ] specify state
+    - [ ] specify board with pieces, etc
+    - [ ] specify ruleset (and therefore validators to use) (or meybe this is more advanced?)
+    - [ ] empty board setup
+    - [ ] standard chess
+    
 
 - [ ] Ruleset configuration system 
 - [x] CLI for testing
