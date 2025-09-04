@@ -1,4 +1,13 @@
+# cached stuff
 __pycache__
 *.pyc
+*.pyo
+
+# non-tracked project stuff
 docs/**
 docs
+
+# vscode stuff
+settings.json
+.vscode/**
+.vscode
