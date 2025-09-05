@@ -12,12 +12,15 @@ class GamePhase(Enum):
 class GameState:
     """Represents the state of the game."""
 
-    def __init__(self, board: Board, current_player_color: Color,
+    def __init__(self, board: Board, 
+                 current_player_color: Color,
+                 phase: GamePhase = GamePhase.MOVEMENT,
                  en_passant_target: Position | None = None,
                  castling_rights: dict | None = None):
+        
         self.board = board
         self.current_player_color = current_player_color
-        self.phase = GamePhase.PLACEMENT
+        self.phase = phase
         self.winner = None
         self.move_history = []
 

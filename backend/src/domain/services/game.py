@@ -1,8 +1,8 @@
 from src.domain.entities.board import Board
-from src.domain.entities.game_state import GameState
+from src.domain.entities.game_state import GameState, GamePhase
 from src.domain.entities.piece import Piece, Pawn, Knight, Bishop, Rook, Queen, King 
 
-from src.domain.value_objects.piece_type import Color
+from src.domain.value_objects.piece_type import Color, PieceType
 from src.domain.value_objects.position import Position
 
 from src.domain.services.go_chess_engine import GoChessEngine
@@ -16,13 +16,19 @@ class Game:
     def __init__(self, config):
         # TODO use config to set up the game
         board = Board()
-        self.state = GameState(board, Color.WHITE)
+        self.config = config # TODO this must be its own type
 
+
+        self.state = GameState(board, 
+                               Color.WHITE, 
+                               config.get("phase"))
+        
         # TODO populate validator according to the config
         self.engine = GoChessEngine(self.state, [
             # TODO
             CheckNowValidator()
         ])
+
         self._build()
 
     def _build(self):
@@ -58,59 +64,6 @@ class Game:
         for piece_type, color, position in piece_positions:
             self.engine.place_piece(piece_type(color), position)
 
-        # testing normal movements and checks
-        # TODO remove this in production
-        # self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
-        # self.state.switch_player() # TODO maybe this should be done within moving, or might cause problems
-        # self.engine.move_piece(Position.from_algebraic("e7"), Position.from_algebraic("e5"))
-        # self.state.switch_player() 
-        # self.engine.move_piece(Position.from_algebraic("f2"), Position.from_algebraic("f4"))
-        # self.state.switch_player()  
-        # self.engine.move_piece(Position.from_algebraic("d8"), Position.from_algebraic("h4"))
-        # self.state.switch_player()
-
-        # test en passant capture
-        # self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
-        # self.state.switch_player() 
-        # self.engine.move_piece(Position.from_algebraic("a7"), Position.from_algebraic("a5"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("e4"), Position.from_algebraic("e5"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("d7"), Position.from_algebraic("d5"))
-        # self.state.switch_player()
-
-        # test castling on kingside
-        # self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("g7"), Position.from_algebraic("g6"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("g1"), Position.from_algebraic("f3"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("g8"), Position.from_algebraic("f6"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("f1"), Position.from_algebraic("c4"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("f8"), Position.from_algebraic("g7"))
-        # self.state.switch_player()
-
-        # test castling on queenside
-        # self.engine.move_piece(Position.from_algebraic("d2"), Position.from_algebraic("d4"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("d7"), Position.from_algebraic("d5"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("c1"), Position.from_algebraic("g5"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("c8"), Position.from_algebraic("g4"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("b1"), Position.from_algebraic("c3"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("b8"), Position.from_algebraic("c6"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("d1"), Position.from_algebraic("d2"))
-        # self.state.switch_player()
-        # self.engine.move_piece(Position.from_algebraic("d8"), Position.from_algebraic("d7"))
-        # self.state.switch_player()
-
         # test promotion 
         self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
         self.state.switch_player()
@@ -136,20 +89,49 @@ class Game:
         # check whose turn it is
         current_color = self.state.current_player_color
         print(self.state.board)
-            
-        # TODO in reality, we would await for input here, managing time, timeouts and so on
-        prompt = f"\n{current_color.name.capitalize()}'s turn:"
-        print(prompt)
-        from_pos = Position.from_algebraic(input(f"From: "))
-        to_pos = Position.from_algebraic(input(f"To: "))
         
-        # move the piece
-        moved = self.engine.move_piece(from_pos, to_pos)
+        # depending on the game phase, we either place or move a piece
+        
+        if self.state.phase == GamePhase.PLACEMENT:
+            prompt = f"\n{current_color.name.capitalize()}'s turn to place a piece:"
+            print(prompt)
+            
+            piece, position = self.placement_prompt()
+            placed = self.engine.place_piece(piece, position)
+
+        elif self.state.phase == GamePhase.MOVEMENT:
+
+            # TODO in reality, we would await for input here, managing time, timeouts and so on
+            prompt = f"\n{current_color.name.capitalize()}'s turn to move:"
+            print(prompt)
+            from_pos = Position.from_algebraic(input(f"From: "))
+            to_pos = Position.from_algebraic(input(f"To: "))
+            moved = self.engine.move_piece(from_pos, to_pos)
+        
+
         # at the end 
         self.state.switch_player()
 
         # TODO check end conditions, if check then check checkmate
         # stalemate: no valid moves left for any piece of the current player
 
-    
+    def placement_prompt(self): 
+        """Prompt the user for piece placement."""
+
+        st = "Pieces: P, R, N, B, Q, K (ex.: Nb3): "
+        algebraic = input(st).strip()
+        # divide into piece type and position
+        algebraic_piece, algebraic_position = algebraic[0].upper(), algebraic[1:].lower()
+        match algebraic_piece:
+            case 'P': piece_type = PieceType.PAWN
+            case 'R': piece_type = PieceType.ROOK
+            case 'N': piece_type = PieceType.KNIGHT
+            case 'B': piece_type = PieceType.BISHOP
+            case 'Q': piece_type = PieceType.QUEEN
+            case 'K': piece_type = PieceType.KING
+            case _: raise ValueError("Invalid piece type")
+        
+        piece = Piece.create(piece_type, self.state.current_player_color)
+        position = Position.from_algebraic(algebraic_position)
+        return piece, position
     

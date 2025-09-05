@@ -1,5 +1,7 @@
 import sys
 import os
+from src.domain.entities.game_state import GamePhase
+
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -17,7 +19,10 @@ def main():
     # Simple placement phase for demonstration
     
     print("\nGame ready. This is a skeleton. Implement further interactions.")
-    game = Game(config={})  # Assuming config is a dictionary for now
+    game = Game(
+        config={
+            "phase": GamePhase.PLACEMENT
+            })  # Assuming config is a dictionary for now
     
     flag = True
     while flag:

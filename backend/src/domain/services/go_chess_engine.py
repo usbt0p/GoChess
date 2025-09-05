@@ -30,7 +30,7 @@ class GoChessEngine:
         moving is an atomic operation, it either happens at once or it doesn't."""
 
         # TODO Validation logic will be added here
-        # TODO validators are held in a list, and share the same interface
+        # TODO validators are held in a list, and share the same interface (ideally??)
         # except for the arguments they take
         # we can iterate and pass all the arguments, and let them sort it out
         # or we can modify in some way the interface to accept the game state which has the board 
