@@ -4,6 +4,7 @@ from src.domain.entities.piece import Piece, Pawn, Knight, Bishop, Rook, Queen, 
 
 from src.domain.value_objects.piece_type import Color, PieceType
 from src.domain.value_objects.position import Position
+from src.domain.value_objects.game_config import GameConfig
 
 from src.domain.services.go_chess_engine import GoChessEngine
 from src.domain.services.validators import CheckNowValidator
@@ -13,7 +14,7 @@ from src.domain.services.validators import CheckNowValidator
 class Game:
     """Build a board with game state, pieces, configuration, rules and a GoChessEngine instance."""
 
-    def __init__(self, config):
+    def __init__(self, config : GameConfig):
         # TODO use config to set up the game
         board = Board()
         self.config = config # TODO this must be its own type
@@ -21,7 +22,7 @@ class Game:
 
         self.state = GameState(board, 
                                Color.WHITE, 
-                               config.get("phase"))
+                               config.phase)
         
         # TODO populate validator according to the config
         self.engine = GoChessEngine(self.state, [

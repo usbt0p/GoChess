@@ -1,0 +1,11 @@
+# Default game configuration
+placement_turns: 24
+king_placement_rule: "any"
+pawn_placement_rank_limit: 5
+max_pieces:
+  PAWN: 8
+  ROOK: 2
+  KNIGHT: 2
+  BISHOP: 2
+  QUEEN: 1
+place_king_as_piece: false
