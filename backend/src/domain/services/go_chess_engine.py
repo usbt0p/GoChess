@@ -17,7 +17,33 @@ class GoChessEngine:
         If the placement is valid, the board state is updated, therefore
         placing is an atomic operation, it either happens at once or it doesn't.
         """
-        # TODO Validation logic will be added here
+        # TODO Validation logic will be added here for now, then offloaded as necessary to validators
+        # first: valid, occupied square, correct piece color
+        # out of bounds is checked by the board itself
+        if not piece:
+            raise InvalidPlacementError("No piece provided for placement")
+        if self._game_state.board.get_piece(position) is not None:
+            raise InvalidPlacementError("Position already occupied")
+        if piece.color != self._game_state.current_player_color:
+            raise InvalidPlacementError("It's not your turn to place this piece")
+        
+        # -------- MUST-HAVE VALIDATIONS BEFORE THE PLACEMENT -----------
+
+        # see if the player is in check NOW before placing
+        check_now = CheckNowValidator()
+        if check_now.validate(self._game_state, piece.color):
+            print(f"Player {piece.color.name.capitalize()} is currently in check, cannot place piece.")
+
+        # simulate the move and check if the opposite player's king would be left in check
+        check_next = CheckInNextPlacementValidator()
+        if check_next.validate(self._game_state, piece, position, ~piece.color):
+            raise InvalidMoveError("Move would leave king in check") 
+
+        # TODO piece count validator (game config pending)      
+
+        # see if the move gives check to the opposing king AFTER the placement
+        if check_now.validate(self._game_state, ~piece.color):
+            print(f"Move results in check to {(~piece.color).name.capitalize()}")
 
         # after all is good, place the piece
         # this is the last step ideally
@@ -53,7 +79,7 @@ class GoChessEngine:
             raise InvalidMoveError("Invalid move for this piece")
 
         # Validators for check conditions
-        check_next = CheckNextValidator()
+        check_next = CheckInNextMovementValidator()
 
         # simulate the move and check if the current player's king would be in check
         if check_next.validate(self._game_state, from_pos, to_pos, piece.color):

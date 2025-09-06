@@ -103,7 +103,7 @@ class CheckNowValidator(Validator):
         return is_square_attacked_by(game_state, king_pos, opponent_color)
 
 
-class CheckNextValidator(Validator):
+class CheckInNextMovementValidator(Validator):
 
     def validate(
         self,
@@ -130,26 +130,75 @@ class CheckNextValidator(Validator):
 
         check = CheckNowValidator()
         return check.validate(temp_game_state, player_color)
+    
+class CheckInNextPlacementValidator(Validator):
+    """Validates if placing a piece would leave the player's king in check."""
+
+    def validate(
+        self,
+        game_state: GameState,
+        piece,  # Piece to be placed
+        position: Position,
+        player_color: Color,
+    ) -> bool:
+        """Checks if placing a piece at position would leave the king in check."""
+        # Make the placement on a copy of the board
+        temp_board = game_state.board.copy()
+        if temp_board.get_piece(position) is not None:
+            return False  # Can't place on an occupied square
+        temp_board.place_piece(piece, position)
+
+        # Create a temporary game state for validation
+        temp_game_state = GameState(
+            board=temp_board,
+            current_player_color=game_state.current_player_color,
+            en_passant_target=game_state.en_passant_target,
+            castling_rights=game_state.castling_rights,
+        )
+
+        check = CheckNowValidator()
+        return check.validate(temp_game_state, player_color)
 
 
 # TODO: Implement other specific rule validators
+# the problem with the plimorphism idea:
+# each validator needs different parameters, and not every one of them is done
+# sequentially, some are required in different phases, plus some are
+# more important than others...
+# however, some stuff is susceptible to this, like stalemate, castling, en passant, promotion, etc. 
 """
 - phase switch validator
-- piece placement validator
 - piece movement rules validator (pawns move forward, etc)
+ 
+# for placement phase
+- no placing self in check  (maybe we want a mode where the king is placed last?)
+- no placing that would put opponent in check  (if applicable)
+- no placing on occupied square 
+
+- piece count  (e.g., only 1 king, 2 rooks, etc. per color)
+- no pawns beyond a certain rank validator
+- some sort of castling rights validator that allows certain placements to enable castling
+
+
 
 - algebraic notation validator
     - grammar
     - syntax
     - correspondence with piece movement and board state
 
-- valid movement (inside board, not occupied by own piece, 
+# these shopuld be done before, but a possibility would be (for the legal move one) to 
+# just put the board in an invalid state and then check if the move is valid
+
+- valid movement (inside board, not occupied by own piece / uneatable opponent piece, etc.)
     piece of players color, etc.)
 - legal movement validator (e.g., no moving into check)
-- check validator
-- capture validator (when a move is capture, report the captured piece)
-- checkmate validator
 
+
+# these can be done at the end of a turn, after the board state has changed
+
+- checkmate validator
+- capture validator (when a move is capture, report the captured piece)
+- opponent in check validator
 - stalemate validator
 - castling validator
 - en passant validator

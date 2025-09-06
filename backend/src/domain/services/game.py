@@ -39,8 +39,8 @@ class Game:
 
         # Place pieces on the board
         for i in range(8):  # placing pawns
-            self.engine.place_piece(Pawn(Color.WHITE), Position(6, i))
-            self.engine.place_piece(Pawn(Color.BLACK), Position(1, i))
+            self.state.board.place_piece(Pawn(Color.WHITE), Position(6, i))
+            self.state.board.place_piece(Pawn(Color.BLACK), Position(1, i))
 
         piece_positions = [
             (King, Color.WHITE, Position(7, 4)),
@@ -62,8 +62,8 @@ class Game:
         ]
 
         for piece_type, color, position in piece_positions:
-            self.engine.place_piece(piece_type(color), position)
-
+            self.state.board.place_piece(piece_type(color), position)
+    
         # test promotion 
         self.engine.move_piece(Position.from_algebraic("e2"), Position.from_algebraic("e4"))
         self.state.switch_player()
@@ -95,7 +95,7 @@ class Game:
         if self.state.phase == GamePhase.PLACEMENT:
             prompt = f"\n{current_color.name.capitalize()}'s turn to place a piece:"
             print(prompt)
-            
+
             piece, position = self.placement_prompt()
             placed = self.engine.place_piece(piece, position)
 
